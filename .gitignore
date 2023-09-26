@@ -1,0 +1,5 @@
+logs/*
+_*
+.env
+venv
+

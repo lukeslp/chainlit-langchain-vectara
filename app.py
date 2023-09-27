@@ -1,4 +1,4 @@
-# vectara.py
+# app.py
 
 import os
 import logging
@@ -16,8 +16,9 @@ from langchain.chains.qa_with_sources.retrieval import RetrievalQAWithSourcesCha
 from langchain.memory import ChatMessageHistory, ConversationBufferMemory
 from langchain.docstore.document import Document
 
-load_dotenv()
+from chainlit.input_widget import Select, Switch, Slider
 
+load_dotenv()
 
 # Input your API keys in .env
 vectara_instance = Vectara(
@@ -29,6 +30,33 @@ vectara_instance = Vectara(
 
 @cl.on_chat_start
 async def start():
+    # Define chat settings
+    settings = await cl.ChatSettings(
+        [
+            Select(
+                id="Model",
+                label="OpenAI - Model",
+                values=["gpt-3.5-turbo", "gpt-3.5-turbo-16k",
+                        "gpt-4", "gpt-4-32k"],
+                initial_index=1,
+            ),
+            Switch(id="Streaming", label="OpenAI - Stream Tokens", initial=True),
+            Slider(
+                id="Temperature",
+                label="OpenAI - Temperature",
+                initial=0,
+                min=0,
+                max=2,
+                step=0.1,
+            ),
+        ]
+    ).send()
+    # Call the setup_agent function with the chat settings
+    await setup_agent(settings)
+
+
+@cl.on_settings_update
+async def setup_agent(settings):
     # Initialize chat message history and conversation buffer memory
     message_history = ChatMessageHistory()
     memory = ConversationBufferMemory(
@@ -39,9 +67,10 @@ async def start():
     )
 
     # Initialize conversational retrieval chain
+    llm = ChatOpenAI(model_name=settings["Model"],
+                     temperature=settings["Temperature"], streaming=settings["Streaming"])
     chain = ConversationalRetrievalChain.from_llm(
-        ChatOpenAI(model_name="gpt-3.5-turbo-16k-0613",
-                   temperature=0, streaming=True),
+        llm,
         chain_type="stuff",
         retriever=vectara_instance.as_retriever(),
         memory=memory,

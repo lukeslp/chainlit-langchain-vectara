@@ -17,7 +17,7 @@ Visit [Vectara's Getting Started page](https://vectara.com/developers/getting-st
 2. **Clone the repo and switch directories**
 
 ```
-git clone lukeslp/chainlit-langchain-vectara
+git clone https://github.com/lukeslp/chainlit-langchain-vectara.git
 cd chainlit-langchain-vectara
 ```
 
